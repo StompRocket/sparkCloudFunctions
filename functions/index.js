@@ -23,6 +23,7 @@ exports.newMessage = functions.database.ref('/chats/{chatId}/')
       while (i < Object.keys(members).length) {
         let person = members[Object.keys(members)[i]]
         let personUID = person.uid
+        //let shouldISend = person.send
         console.log(person + ' uid ' + personUID + ' i ' + i)
         if (personUID == sender) {
           console.log('sender')
@@ -58,7 +59,7 @@ exports.newMessage = functions.database.ref('/chats/{chatId}/')
         }
         i++
       }
-    //  console.log('new message', original.messages[Object.keys(original.messages)[Object.keys(original.messages).length - 1]])
+      //  console.log('new message', original.messages[Object.keys(original.messages)[Object.keys(original.messages).length - 1]])
       console.log(original.members)
       console.log(lastMessage)
       return original
