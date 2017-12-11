@@ -5,7 +5,7 @@ const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 admin.initializeApp(functions.config().firebase)
 var db = admin.database()
-exports.newMessage = functions.database.ref('/chats/{chatId}/')
+exports.messageNotifications = functions.database.ref('/chats/{chatId}/')
     .onWrite(event => {
       // Grab the current value of what was written to the Realtime Database.
       const original = event.data.val()
@@ -18,12 +18,21 @@ exports.newMessage = functions.database.ref('/chats/{chatId}/')
           body: lastMessage.text
         }
       }
+      let logRef = db.ref('system/messagesSent')
+      logRef.once('value', function (data) {
+        let amount = data.val().amount
+        logRef.update({
+          time: new Date().getTime(),
+          amount: amount + 1
+        })
+      })
+
       console.log('sender ' + sender)
       let i = 0
       while (i < Object.keys(members).length) {
         let person = members[Object.keys(members)[i]]
         let personUID = person.uid
-        //let shouldISend = person.send
+        // let shouldISend = person.send
         console.log(person + ' uid ' + personUID + ' i ' + i)
         if (personUID == sender) {
           console.log('sender')
@@ -46,9 +55,22 @@ exports.newMessage = functions.database.ref('/chats/{chatId}/')
                       // See the MessagingDevicesResponse reference documentation for
                       // the contents of response.
                       console.log('Successfully sent message:', JSON.stringify(response))
+
+                      if (response.results[0].error) {
+                        let errorRef = db.ref('system/errorReporting/FCMErros')
+                        errorRef.push().set({
+                          time: new Date().getTime(),
+                          result: response
+                        })
+                      }
                     })
                   .catch(function (error) {
                     console.log('Error sending message:', JSON.stringify(error))
+                    let errorRef = db.ref('system/errorReporting/FCMErros')
+                    errorRef.push().set({
+                      time: new Date().getTime(),
+                      result: error
+                    })
                   })
                 }
               }
